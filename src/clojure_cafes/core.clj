@@ -8,22 +8,22 @@
    {:name "Blaznavac Café" :location "Centar" :coffee 3 :ambience 5}
    {:name "Novobeogradska Pržionica" :location "Novi Beograd" :coffee 5 :ambience 3}])
 
-;; MAP – izvlačenje ocena kafe
+;; izvlačenje ocena kafe
 (def coffee-scores
   (map :coffee cafes))
 
-;; FILTER – kafeterije u Dorćolu
+;; kafeterije u Dorćolu
 (def dorcol-cafes
   (filter #(= "Dorćol" (:location %)) cafes))
 
-;; LET + REDUCE – prosečan ambijent
+;; prosečan ambijent
 (defn average-ambience []
   (let [scores (map :ambience cafes)
         total  (reduce + scores)
         n      (count cafes)]
     (/ total n)))
 
-;; REDUCE – zbirni podaci
+;; zbirni podaci
 (def aggregated
   (reduce
     (fn [[cnt coffee-sum ambience-sum] e]
@@ -32,3 +32,17 @@
        (+ ambience-sum (:ambience e))])
     [0 0 0]
     cafes))
+
+;;  prosečna ocena kafe
+(defn average-coffee []
+  (let [scores (map :coffee cafes)
+        total  (reduce + scores)
+        n      (count cafes)]
+    (/ total n)))
+
+;; ukupna suma svih ocena
+(defn total-scores []
+  (reduce (fn [sum cafe]
+            (+ sum (:coffee cafe) (:ambience cafe)))
+          0
+          cafes))
