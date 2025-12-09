@@ -46,3 +46,26 @@
             (+ sum (:coffee cafe) (:ambience cafe)))
           0
           cafes))
+
+(defn short-strings [strings]
+  (filter #(<= (count %) 3) strings))
+
+(defn total-chars [strings]
+  (reduce + (map count strings)))
+
+(defn total-chars [strings]
+  (reduce #(+ %1 (count %2)) 0 strings))
+
+;;Agregacija (BROJ, suma kafe, suma ambijenta)
+(def aggregated
+  (reduce
+    (fn [[cnt coffee-sum ambience-sum] cafe]
+      [(inc cnt)
+       (+ coffee-sum (:coffee cafe))
+       (+ ambience-sum (:ambience cafe))])
+    [0 0 0]
+    cafes))
+
+;;Sve kafeterije iz jednog mesta (parametar)
+(defn cafes-by-location [loc]
+  (filter #(= loc (:location %)) cafes))
