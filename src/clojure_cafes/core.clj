@@ -3,11 +3,41 @@
 
 ;; PODACI
 (def cafes
-  [{:name "Kafeterija" :location "Dorćol" :coffee 5 :ambience 4}
-   {:name "Pržionica D59B" :location "Vračar" :coffee 4 :ambience 5}
-   {:name "Blaznavac Café" :location "Centar" :coffee 3 :ambience 5}
-   {:name "Novobeogradska Pržionica" :location "Novi Beograd" :coffee 5 :ambience 3}])
+  [{:name "Kafeterija"
+    :location "Dorćol"
+    :coffee 5
+    :ambience 4
+    :esthetics 4
+    :noise 3
+    :milk #{:soy :cow}
+    :coffee-until 22}
 
+   {:name "Pržionica D59B"
+    :location "Vračar"
+    :coffee 4
+    :ambience 5
+    :esthetics 5
+    :noise 4
+    :milk #{:cow :coconut}
+    :coffee-until 20}
+
+   {:name "Blaznavac Café"
+    :location "Centar"
+    :coffee 3
+    :ambience 5
+    :esthetics 5
+    :noise 2
+    :milk #{:soy :cow :coconut}
+    :coffee-until 23}
+
+   {:name "Novobeogradska Pržionica"
+    :location "Novi Beograd"
+    :coffee 5
+    :ambience 3
+    :esthetics 3
+    :noise 3
+    :milk #{:cow}
+    :coffee-until 19}])
 ;; izvlačenje ocena kafe
 (def coffee-scores
   (map :coffee cafes))
@@ -56,6 +86,10 @@
 (defn total-chars [strings]
   (reduce #(+ %1 (count %2)) 0 strings))
 
+;;kafići koji imaju određeno mleko
+(defn cafes-with-milk [milk-type]
+  (filter #(contains? (:milk %) milk-type) cafes))
+
 ;;Agregacija (BROJ, suma kafe, suma ambijenta)
 (def aggregated
   (reduce
@@ -66,6 +100,20 @@
     [0 0 0]
     cafes))
 
+;;kafići koji služe kafu posle određenog vremena
+(defn cafes-open-after [hour]
+  (filter #(>= (:coffee-until %) hour) cafes))
 ;;Sve kafeterije iz jednog mesta (parametar)
 (defn cafes-by-location [loc]
   (filter #(= loc (:location %)) cafes))
+
+;;
+(defn average-coffee []
+  (average (map :coffee cafes)))
+
+(defn average-ambience []
+  (average (map :ambience cafes)))
+
+;; Score = (ocena ambijenta * 0.4)
+;      + (podudaranje kafe * 0.4)
+;      + (udaljenost * 0.2)
