@@ -1,0 +1,17 @@
+<dependencies>
+    <dependency>
+        <groupId>org.clojure</groupId>
+        <artifactId>clojure</artifactId>
+        <version>1.11.1</version>
+    </dependency>
+
+    <dependency>
+        <groupId>midje</groupId>
+        <artifactId>midje</artifactId>
+        <version>1.10.9</version>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+
+
+
