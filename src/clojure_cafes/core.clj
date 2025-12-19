@@ -1,7 +1,10 @@
-(ns clojure-cafes.core)
 
+(ns clojure-cafes.core
+  (:require [clojure-cafes.db :as db]
+            [next.jdbc :as jdbc]))
 
-;; PODACI
+(db/create-tables!)
+
 (def cafes
   [{:name "Kafeterija"
     :location "Dorćol"
@@ -39,38 +42,49 @@
     :milk #{:cow}
     :coffee-until 19}])
 
+(defn insert-cafe-with-milk! [cafe]
+  (db/insert-cafe! cafe)
+  (let [cafe-id (db/last-cafe-id)]
+    (doseq [m (:milk cafe)]
+      (db/insert-cafe-milk! cafe-id m))))
 
-(defn average [values]
-  (/ (reduce + values)
-     (count values)))
-(defn average-coffee []
-  (average (map :coffee cafes)))
+(doseq [cafe cafes]
+  (insert-cafe-with-milk! cafe))
 
-(defn average-ambience []
-  (average (map :ambience cafes)))
+(defn get-cafes-with-milk []
+  (jdbc/execute! db/ds
+                 ["SELECT c.id,
+             c.name,
+             c.location,
+             c.coffee,
+             c.ambience,
+             c.esthetics,
+             c.noise,
+             c.coffee_until,
+             m.milk
+      FROM cafes c
+      LEFT JOIN cafe_milk m ON c.id = m.cafe_id"]))
 
-(defn total-scores []
-  (reduce
-    (fn [sum cafe]
-      (+ sum (:coffee cafe) (:ambience cafe)))
-    0
-    cafes))
-(defn cafes-by-location [loc]
-  (filter #(= loc (:location %)) cafes))
+(defn rows->cafes [rows]
+  (->> rows
+       (group-by :cafes/id)
+       (map (fn [[_ rs]]
+              (let [r (first rs)]
+                {:name (:cafes/name r)
+                 :location (:cafes/location r)
+                 :coffee (:cafes/coffee r)
+                 :ambience (:cafes/ambience r)
+                 :esthetics (:cafes/esthetics r)
+                 :noise (:cafes/noise r)
+                 :coffee-until (:cafes/coffee_until r)
+                 :milk (set
+                         (keep #(some-> % :cafe_milk/milk keyword)
+                               rs))})))))
 
-(defn cafes-with-milk [milk-type]
-  (filter #(contains? (:milk %) milk-type) cafes))
+(defn load-cafes []
+  (rows->cafes (get-cafes-with-milk)))
 
-(defn cafes-open-after [hour]
-  (filter #(>= (:coffee-until %) hour) cafes))
-(def aggregated
-  (reduce
-    (fn [[cnt coffee-sum ambience-sum] cafe]
-      [(inc cnt)
-       (+ coffee-sum (:coffee cafe))
-       (+ ambience-sum (:ambience cafe))])
-    [0 0 0]
-    cafes))
+
 (def ana
   {:name "Ana"
    :preferences
@@ -79,6 +93,7 @@
     :min-coffee 4
     :likes-quiet true
     :open-after 20}})
+
 (defn cafe-score [cafe prefs]
   (let [quiet-score (if (:likes-quiet prefs)
                       (- 5 (:noise cafe))
@@ -87,6 +102,7 @@
        (* 2 (:ambience cafe))
        (:esthetics cafe)
        quiet-score)))
+
 (defn filter-cafes [cafes prefs]
   (->> cafes
        (filter #(= (:location %) (:location prefs)))
@@ -99,16 +115,22 @@
     (->> (filter-cafes cafes prefs)
          (map #(assoc % :score (cafe-score % prefs)))
          (sort-by :score >))))
-(recommend-for-user cafes ana)
-(time
-  (doall
-    (recommend-for-user cafes ana)))
 
-(defn time-ms [f]
-  (let [start (System/nanoTime)
-        result (f)
-        end (System/nanoTime)]
-    {:time-ms (/ (- end start) 1e6)
-     :result result}))
 
-(time-ms #(doall (recommend-for-user cafes ana)))
+(defn main-test! []
+  (db/create-tables!)
+  (doseq [c cafes]
+    (insert-cafe-with-milk! c))
+  (let [loaded-cafes (load-cafes)
+        recommendations (recommend-for-user loaded-cafes ana)]
+    (println "Loaded cafes:" loaded-cafes)
+    (println "Recommendations for Ana:" recommendations)
+    recommendations))
+(defn recommend-for-logged-in-user [user-name]
+  (let [db-user (find-user user-name)
+        prefs {:location (:users/location_pref db-user)
+               :milk (keyword (:users/milk_pref db-user))
+               :min-coffee (:users/min_coffee db-user)
+               :likes-quiet (:users/likes_quiet db-user)
+               :open-after (:users/open_after db-user)}]
+    (recommend-for-user (load-cafes) {:name user-name :preferences prefs})))
