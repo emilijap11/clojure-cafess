@@ -1,9 +1,9 @@
-(ns clojure-cafes.web
+(ns clojurecafes.web
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
             [hiccup.page :refer [html5]]
-            [clojure-cafes.core :as core]
-            [clojure-cafes.db :as db]
+            [clojurecafes.core :as core]
+            [clojure.cafes.db :as db]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.middleware.params :refer [wrap-params]]))
 
@@ -14,7 +14,7 @@
     [:body
      [:h1 "Recommendations for Ana"]
      [:ul
-      (for [c (core/recommend-for-user (core/load-cafes) core/ana)]
+      (for [c (core/recommend-for-user (db/load-cafes) core/ana)]
         [:li (str (:name c) " - score: " (:score c))])]]))
 
 ;; rute
@@ -50,4 +50,7 @@
 
 ;; start servera
 (defn start-server []
+  (db/create-tables!)
+  (core/seed-cafes!)
   (run-jetty app-with-params {:port 3000 :join? false}))
+

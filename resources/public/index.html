@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kafići</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Kafići</h1>
+
+<label for="location-filter">Filter po lokaciji:</label>
+<select id="location-filter">
+    <option value="">Sve lokacije</option>
+    <option value="Dorćol">Dorćol</option>
+    <option value="Vračar">Vračar</option>
+    <option value="Centar">Centar</option>
+</select>
+
+<label for="distance-filter">Maksimalna udaljenost (km):</label>
+<input type="number" id="distance-filter" placeholder="Unesi km" />
+
+<ul id="cafes-list"></ul>
+
+<script src="app.js"></script>
+</body>
+</html>
